@@ -3,7 +3,7 @@ var cs = require('coffee-script'),
 
 requirejs.config({
     baseUrl: 'scripts',
-    nodeRequire: require
+    commonRequire: require
 });
 
 requirejs(['./coffee/foo', 'bar'],

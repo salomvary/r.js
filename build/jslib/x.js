@@ -18,7 +18,7 @@ console: false, java: false, module: false */
 var requirejs, require, define;
 (function (console, args, readFileFunc) {
 
-    var fileName, env, fs, vm, path, exec, rhinoContext, dir, nodeRequire,
+    var fileName, env, fs, vm, path, exec, rhinoContext, dir, commonRequire,
         nodeDefine, exists, reqMain, loadedOptimizedLib, resolve,
         version = '1.0.7',
         jsSuffixRegExp = /\.js$/,
@@ -33,7 +33,7 @@ var requirejs, require, define;
     }
 
     if (typeof require !== 'undefined')  {
-        nodeRequire = require;
+        commonRequire = require;
         reqMain = require.main;
     }
 
@@ -51,7 +51,7 @@ var requirejs, require, define;
         rhinoContext = Packages.org.mozilla.javascript.ContextFactory.getGlobal().enterContext();
 
         exec = function (string, name) {
-            return rhinoContext.evaluateString(this, this.requirejsVars.require.makeNodeWrapper(string),
+            return rhinoContext.evaluateString(this, this.requirejsVars.require.makeWrapper(string),
                                                 name, 0, null);
         };
 
@@ -87,7 +87,7 @@ var requirejs, require, define;
         };
 
         exec = function (string, name) {
-            return vm.runInThisContext(this.requirejsVars.require.makeNodeWrapper(string),
+            return vm.runInThisContext(this.requirejsVars.require.makeWrapper(string),
                                        name ? fs.realpathSync(name) : '');
         };
 
@@ -118,14 +118,14 @@ var requirejs, require, define;
         require: require,
         requirejs: require,
         define: define,
-        nodeRequire: nodeRequire
+        commonRequire: commonRequire
     };
-    require.nodeRequire = nodeRequire;
+    require.commonRequire = commonRequire;
 
     //Add wrapper around the code so that it gets the requirejs
     //API instead of the Node API, and it is done lexically so
     //that it survives later execution.
-    require.makeNodeWrapper = function (contents) {
+    require.makeWrapper = function (contents) {
         return '(function (require, requirejs, define) { ' +
                 contents +
                 '\n}(requirejsVars.require, requirejsVars.requirejs, requirejsVars.define));';
@@ -171,7 +171,7 @@ var requirejs, require, define;
 
     //If CommonJS modules are supported (Node or Rhino >= 1.7R3), and included via a require('requirejs'), just export and
     //THROW IT ON THE GROUND!
-    if (nodeRequire && reqMain !== module) {
+    if (commonRequire && reqMain !== module) {
         setBaseUrl(resolve(reqMain && reqMain.filename ? reqMain.filename : '.'));
 
         //Create a method that will run the optimzer given an object

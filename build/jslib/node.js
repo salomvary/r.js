@@ -15,7 +15,7 @@
  */
 
 (function () {
-    var nodeReq = requirejsVars.nodeRequire,
+    var nodeReq = requirejsVars.commonRequire,
         req = requirejsVars.require,
         def = requirejsVars.define,
         fs = nodeReq('fs'),
@@ -57,7 +57,7 @@
         if (path.existsSync(url)) {
             contents = fs.readFileSync(url, 'utf8');
 
-            contents = req.makeNodeWrapper(contents);
+            contents = req.makeWrapper(contents);
             try {
                 vm.runInThisContext(contents, fs.realpathSync(url));
             } catch (e) {
@@ -71,7 +71,7 @@
         } else {
             def(moduleName, function () {
                 try {
-                    return (context.config.nodeRequire || req.nodeRequire)(moduleName);
+                    return (context.config.commonRequire || req.commonRequire)(moduleName);
                 } catch (e) {
                     err = new Error('Calling node\'s require("' +
                                         moduleName + '") failed with error: ' + e);
@@ -91,7 +91,7 @@
     //Override to provide the function wrapper for define/require.
     req.exec = function (text) {
         /*jslint evil: true */
-        text = req.makeNodeWrapper(text);
+        text = req.makeWrapper(text);
         return eval(text);
     };
 }());
