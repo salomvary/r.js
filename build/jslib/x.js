@@ -19,7 +19,7 @@ var requirejs, require, define;
 (function (console, args, readFileFunc) {
 
     var fileName, env, fs, vm, path, exec, rhinoContext, dir, nodeRequire,
-        nodeDefine, exists, reqMain, loadedOptimizedLib,
+        nodeDefine, exists, reqMain, loadedOptimizedLib, resolve,
         version = '1.0.7',
         jsSuffixRegExp = /\.js$/,
         commandOption = '',
@@ -30,6 +30,11 @@ var requirejs, require, define;
 
     function showHelp() {
         console.log('See https://github.com/jrburke/r.js for usage.');
+    }
+
+    if (typeof require !== 'undefined')  {
+        nodeRequire = require;
+        reqMain = require.main;
     }
 
     if (typeof Packages !== 'undefined') {
@@ -46,11 +51,16 @@ var requirejs, require, define;
         rhinoContext = Packages.org.mozilla.javascript.ContextFactory.getGlobal().enterContext();
 
         exec = function (string, name) {
-            return rhinoContext.evaluateString(this, string, name, 0, null);
+            return rhinoContext.evaluateString(this, this.requirejsVars.require.makeNodeWrapper(string),
+                                                name, 0, null);
         };
 
         exists = function (fileName) {
             return (new java.io.File(fileName)).exists();
+        };
+
+        resolve = function(fileName) {
+            return (new java.io.File(fileName)).getAbsolutePath() + "";
         };
 
         //Define a console.log for easier logging. Don't
@@ -70,14 +80,7 @@ var requirejs, require, define;
         fs = require('fs');
         vm = require('vm');
         path = require('path');
-        nodeRequire = require;
         nodeDefine = define;
-        reqMain = require.main;
-
-        //Temporarily hide require and define to allow require.js to define
-        //them.
-        require = undefined;
-        define = undefined;
 
         readFile = function (path) {
             return fs.readFileSync(path, 'utf8');
@@ -92,6 +95,9 @@ var requirejs, require, define;
             return path.existsSync(fileName);
         };
 
+        resolve = function(fileName) {
+            return path.resolve(fileName);
+        };
 
         fileName = process.argv[2];
 
@@ -101,21 +107,35 @@ var requirejs, require, define;
         }
     }
 
+    //Temporarily hide require and define to allow require.js to define
+    //them.
+    require = undefined;
+    define = undefined;
+
     //INSERT require.js
+
+    this.requirejsVars = {
+        require: require,
+        requirejs: require,
+        define: define,
+        nodeRequire: nodeRequire
+    };
+    require.nodeRequire = nodeRequire;
+
+    //Add wrapper around the code so that it gets the requirejs
+    //API instead of the Node API, and it is done lexically so
+    //that it survives later execution.
+    require.makeNodeWrapper = function (contents) {
+        return '(function (require, requirejs, define) { ' +
+                contents +
+                '\n}(requirejsVars.require, requirejsVars.requirejs, requirejsVars.define));';
+    };
+
 
     if (env === 'rhino') {
         //INSERT build/jslib/rhino.js
     } else if (env === 'node') {
-        this.requirejsVars = {
-            require: require,
-            requirejs: require,
-            define: define,
-            nodeRequire: nodeRequire
-        };
-        require.nodeRequire = nodeRequire;
-
         //INSERT build/jslib/node.js
-
     }
 
     //Support a default file name to execute. Useful for hosted envs
@@ -149,10 +169,10 @@ var requirejs, require, define;
         }
     }
 
-    //If in Node, and included via a require('requirejs'), just export and
+    //If CommonJS modules are supported (Node or Rhino >= 1.7R3), and included via a require('requirejs'), just export and
     //THROW IT ON THE GROUND!
-    if (env === 'node' && reqMain !== module) {
-        setBaseUrl(path.resolve(reqMain ? reqMain.filename : '.'));
+    if (nodeRequire && reqMain !== module) {
+        setBaseUrl(resolve(reqMain && reqMain.filename ? reqMain.filename : '.'));
 
         //Create a method that will run the optimzer given an object
         //config.

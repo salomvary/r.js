@@ -48,15 +48,6 @@
         return ret;
     };
 
-    //Add wrapper around the code so that it gets the requirejs
-    //API instead of the Node API, and it is done lexically so
-    //that it survives later execution.
-    req.makeNodeWrapper = function (contents) {
-        return '(function (require, requirejs, define) { ' +
-                contents +
-                '\n}(requirejsVars.require, requirejsVars.requirejs, requirejsVars.define));';
-    };
-
     req.load = function (context, moduleName, url) {
         var contents, err;
 
