@@ -118,9 +118,10 @@ var requirejs, require, define;
         require: require,
         requirejs: require,
         define: define,
-        commonRequire: commonRequire
+        commonRequire: commonRequire,
+        nodeRequire: commonRequire
     };
-    require.commonRequire = commonRequire;
+    require.commonRequire = require.nodeRequire = commonRequire;
 
     //Add wrapper around the code so that it gets the requirejs
     //API instead of the Node API, and it is done lexically so

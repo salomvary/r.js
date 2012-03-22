@@ -71,7 +71,7 @@
         } else {
             def(moduleName, function () {
                 try {
-                    return (context.config.commonRequire || req.commonRequire)(moduleName);
+                    return (context.config.commonRequire || context.config.nodeRequire || req.commonRequire)(moduleName);
                 } catch (e) {
                     err = new Error('Calling node\'s require("' +
                                         moduleName + '") failed with error: ' + e);
