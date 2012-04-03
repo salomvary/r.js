@@ -48,7 +48,7 @@
         return ret;
     };
 
-    req.load = function (context, moduleName, url) {
+    requirejsVars.nodeLoad = req.load = function (context, moduleName, url) {
         var contents, err;
 
         //Indicate a the module is in process of loading.
@@ -94,4 +94,7 @@
         text = req.makeWrapper(text);
         return eval(text);
     };
+
+    //Hold on to the original execCb to use in useLib calls.
+    requirejsVars.nodeRequireExecCb = require.execCb;
 }());

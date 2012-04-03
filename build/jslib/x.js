@@ -1,5 +1,5 @@
 /**
- * @license r.js 1.0.7 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+ * @license r.js 1.0.7+ Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -11,16 +11,16 @@
  * the shell of the r.js file.
  */
 
-/*jslint strict: false, evil: true, nomen: false */
+/*jslint evil: true, nomen: true */
 /*global readFile: true, process: false, Packages: false, print: false,
-console: false, java: false, module: false */
+console: false, java: false, module: false, requirejsVars */
 
 var requirejs, require, define;
 (function (console, args, readFileFunc) {
 
     var fileName, env, fs, vm, path, exec, rhinoContext, dir, commonRequire,
         nodeDefine, exists, reqMain, loadedOptimizedLib, resolve,
-        version = '1.0.7',
+        version = '1.0.7+',
         jsSuffixRegExp = /\.js$/,
         commandOption = '',
         useLibLoaded = {},
@@ -225,7 +225,9 @@ var requirejs, require, define;
                 }
 
                 var req = requirejs({
-                    context: contextName
+                    context: contextName,
+                    requireLoad: requirejsVars.nodeLoad,
+                    requireExecCb: requirejsVars.nodeRequireExecCb
                 });
 
                 req(['build'], function () {
