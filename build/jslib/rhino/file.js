@@ -129,16 +129,22 @@ define(function () {
         copyFile: function (/*String*/srcFileName, /*String*/destFileName, /*boolean?*/onlyCopyNew) {
             //summary: copies srcFileName to destFileName. If onlyCopyNew is set, it only copies the file if
             //srcFileName is newer than destFileName. Returns a boolean indicating if the copy occurred.
-            var destFile = new java.io.File(destFileName), srcFile, parentDir,
-            srcChannel, destChannel;
+            var destFile = new java.io.File(destFileName),
+            srcFile = new java.io.File(srcFileName),
+            parentDir, srcChannel, destChannel;
 
             //logger.trace("Src filename: " + srcFileName);
             //logger.trace("Dest filename: " + destFileName);
 
+            //Do not copy files over themselves because FileChannel.transferFrom
+            //will result in empty files in this case
+            if(''+srcFile.getAbsolutePath() === ''+destFile.getAbsolutePath()) {
+                return ! onlyCopyNew;
+            }
+
             //If onlyCopyNew is true, then compare dates and only copy if the src is newer
             //than dest.
             if (onlyCopyNew) {
-                srcFile = new java.io.File(srcFileName);
                 if (destFile.exists() && destFile.lastModified() >= srcFile.lastModified()) {
                     return false; //Boolean
                 }
